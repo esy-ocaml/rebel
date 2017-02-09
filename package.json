@@ -16,8 +16,7 @@
     "build": [
       "./compile-rebel.sh",
       "cp _build/src/rebel $cur__bin/"
-    ],
-    "buildsInSource": true
+    ]
   },
   "license": "ISC",
   "scripts": {
