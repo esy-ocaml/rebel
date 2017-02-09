@@ -3,11 +3,11 @@
   "description": "Build system for reason that conforms to the magic-build spec. Implemented with Jenga.",
   "dependencies": {
     "js_of_ocaml-bin": "esy-ocaml/js_of_ocaml-bin.git#esy",
-    "@opam/jenga": "*",
-    "@opam/ocamlfind": "*",
-    "@opam/yojson": "*",
+    "@opam-alpha/jenga": "*",
+    "@opam-alpha/ocamlfind": "*",
+    "@opam-alpha/yojson": "*",
     "ocamlBetterErrors": "esy-ocaml/BetterErrors#esy",
-    "reason": "andreypopp/reason.git#esy"
+    "reason": "facebook/reason.git#esy"
   },
   "devDependencies": {},
   "esy": {
