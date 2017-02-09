@@ -145,10 +145,10 @@ FLG -w -30 -w -40 %s
     Action.save dotMerlinContent target::dotMerlinPath
   };
   Scheme.rules [
-    Rule.simple
+    /* Rule.simple
       targets::[dotMerlinPath]
       deps::thirdPartyNpmMerlinDeps
-      action::(saveMerlinAction previousContents::(readFile path::dotMerlinPath))
+      action::(saveMerlinAction previousContents::(readFile path::dotMerlinPath)) */
   ]
 };
 

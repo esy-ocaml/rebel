@@ -9,12 +9,15 @@
     "ocamlBetterErrors": "esy-ocaml/BetterErrors#esy",
     "reason": "facebook/reason.git#esy"
   },
-  "devDependencies": {},
+  "devDependencies": {
+    "ocaml": "esy-ocaml/ocaml#esy"
+  },
   "esy": {
     "build": [
       "./compile-rebel.sh",
       "cp _build/src/rebel $cur__bin/"
-    ]
+    ],
+    "buildsInSource": true
   },
   "license": "ISC",
   "scripts": {
