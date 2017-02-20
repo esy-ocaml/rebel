@@ -8,6 +8,7 @@
 
 *.cmo
 _build/
+_install/
 *.out
 *.ml
 node_modules/
