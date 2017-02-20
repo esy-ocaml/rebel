@@ -2,20 +2,22 @@
   "name": "rebel",
   "description": "Build system for reason that conforms to the magic-build spec. Implemented with Jenga.",
   "scripts": {
-    "editor": "esy $EDITOR ."
+    "editor": "esy $EDITOR .",
+    "build": "esy build"
   },
   "dependencies": {
     "js_of_ocaml-bin": "esy-ocaml/js_of_ocaml-bin#esy",
     "@opam-alpha/jenga": "*",
-    "@opam-alpha/ocamlfind": "*",
     "@opam-alpha/yojson": "*",
     "ocamlBetterErrors": "esy-ocaml/BetterErrors#esy",
     "reason": "facebook/reason#esy",
     "bs-platform": "esy-ocaml/bucklescript#esy"
   },
   "devDependencies": {
-    "@opam-alpha/utop": "*",
-    "ocaml": "esy-ocaml/ocaml#esy"
+    "ocaml": "esy-ocaml/ocaml#esy",
+    "@opam-alpha/topkg": "*",
+    "@opam-alpha/merlin": "*",
+    "@opam-alpha/utop": "*"
   },
   "esy": {
     "build": [
