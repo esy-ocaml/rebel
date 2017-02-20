@@ -16,7 +16,7 @@ if [ "$TRAVIS_PULL_REQUEST" == "false" ]; then
 
   #go into diractory and copy data we're interested in to that directory
   cd osx-build
-  cp $HOME/rewitness.native rewitness.native
+  cp $HOME/rebel rebel
 
   #add, commit and push files
   git add -f .
