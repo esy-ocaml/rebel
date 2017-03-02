@@ -1,0 +1,14 @@
+language: node_js
+before_install: npm install -g https://github.com/reasonml/esy.git\#beta-v0.0.2
+install: esy install
+script: esy build
+node_js: '6.9'
+os: osx
+after_success: bash ./update-binaries.sh
+cache:
+  yarn: true
+  directories:
+    - $HOME/.esy
+env:
+  global:
+  - secure: Nue88AC3XWbbcZEIXr+xWvDvwIZRhTG7VE2fk1ZvdBYf2x0QA5J3cZd/cDEtFA9sPMnpKhmlSTAnhgJoH9gekoGLAm6mjPXZpfwumnkTYuTnXJo+eaPrPe5PHK5NhqAtrP2DdbHJYjQjOUQk9XqMoomuL/EJiZO9h9Wx+zMc9SURZQAq8l6Ecnh9wJv3PQAv7Qd0RX211+y0Yf4mz4Db1+whkRPsUbhLKqN46YOfgFpd8KDEyJrf/Koy5Eztm9LAI8uTAbfvoArORTQ3b2s6DOjewI89YwObKYGVImj5YOG3lXRRxio/b3SwXIwbfhe+B9xPjG6txbRQRoTFbJKWPfLQBOlc3qX9YCSUOMAUjHhPz/Yfb+aOfhBntw1KwCfNMQ3hqZS5RjLKbJODhsfNZGrx2W3PT3QaILaaF7ZIPdYijYjS018Xsf/75Zd5L6duEWH3TH5ym43wDd5t2kFORqzc36sbuEAnlwu9RvndHLBrUlTaEa5FLqyyC8O7dpjDpGwZ2VQFquKuu08/DYzn9BFIlTXyDV2dfGbtt/EVjn2bbUxa/dHJk8gjJB3WZza1s81EBrlPsvNa7M4Jp3bv/otE9Dg4wXPAlxoKbnUKsQ6qJQJlc5Vkv6DH2WXBHzvluAX09K/aYT8iR787FrGMdXx/vp8jt3dLLSG09E4axMQ

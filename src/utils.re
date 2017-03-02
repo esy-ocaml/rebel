@@ -47,7 +47,7 @@ let bash command => Action.process dir::Path.the_root prog::"bash" args::["-c", 
 
 let bashf fmt => ksprintf bash fmt;
 
-let relD dir::dir str => Dep.path (Path.relative dir::dir str);
+let relD ::dir str => Dep.path (Path.relative ::dir str);
 
 let rel = Path.relative;
 
@@ -77,18 +77,18 @@ let isInterface path => {
 
 let isImplementation path => not (isInterface path);
 
-let hasInterface sourcePaths::sourcePaths path =>
+let hasInterface ::sourcePaths path =>
   not (isInterface path) &&
   List.exists
     sourcePaths
     f::(fun path' => isInterface path' && fileNameNoExtNoDir path' == fileNameNoExtNoDir path);
 
-let getSubDirs dir::dir =>
+let getSubDirs ::dir =>
   Core.Core_sys.ls_dir (tsp dir) |>
-  List.filter f::(fun subDir => Core.Core_sys.is_directory_exn (tsp (rel dir::dir subDir))) |>
-  List.map f::(fun subDir => rel dir::dir subDir);
+  List.filter f::(fun subDir => Core.Core_sys.is_directory_exn (tsp (rel ::dir subDir))) |>
+  List.map f::(fun subDir => rel ::dir subDir);
 
-let rec getNestedSubDirs dir::dir =>
+let rec getNestedSubDirs ::dir =>
   List.fold
     (getSubDirs dir)
     init::[]
@@ -104,8 +104,8 @@ let isImplOrIntfFile file =>
   String.is_suffix file suffix::".mli" ||
   String.is_suffix file suffix::".re" || String.is_suffix file suffix::".ml";
 
-let getSourceFiles dir::dir => {
-  let allDirs = [dir] @ getNestedSubDirs dir::dir;
+let getSourceFiles ::dir => {
+  let allDirs = [dir] @ getNestedSubDirs ::dir;
   let getFilesInDir acc subDir =>
     (
       Core.Core_sys.ls_dir (tsp subDir) |> List.filter f::isImplOrIntfFile |>
@@ -116,17 +116,17 @@ let getSourceFiles dir::dir => {
 
 
 /** Build Path Helpers **/
-let extractTargetName dir::dir => {
+let extractTargetName ::dir => {
   let pathComponents = String.split on::'/' (tsp dir);
   List.nth_exn pathComponents 1
 };
 
-let extractPackageName dir::dir => {
+let extractPackageName ::dir => {
   let pathComponents = String.split on::'/' (tsp dir);
   List.nth_exn pathComponents 2
 };
 
-let convertBuildDirToLibDir buildDir::buildDir target::target => {
+let convertBuildDirToLibDir ::buildDir ::target => {
   let path = String.chop_prefix_exn (tsp buildDir) (tsp (rel dir::build target) ^ "/");
   let pathComponents = String.split path on::'/';
 
@@ -160,8 +160,7 @@ let libToModule (Lib name) => Mod (String.capitalize name |> kebabToCamel);
 
 let pathToModule path => Mod (fileNameNoExtNoDir path |> String.capitalize);
 
-let namespacedName libName::libName path::path =>
-  tsm (libToModule libName) ^ "__" ^ tsm (pathToModule path);
+let namespacedName ::libName ::path => tsm (libToModule libName) ^ "__" ^ tsm (pathToModule path);
 
 let bsKebabToCamel =
   String.foldi
@@ -182,11 +181,10 @@ let bsKebabToCamel =
 let bsLibToModule (Lib name) => Mod (String.capitalize name |> bsKebabToCamel);
 
 /* FIXME Remove after bloomberg/bucklescript#757 is fixed */
-let bsNamespacedName libName::libName path::path =>
+let bsNamespacedName ::libName ::path =>
   /** On OSX files are not case-insensitive so this unnecessary  */
   os_name == "Darwin" ?
-    namespacedName libName::libName path::path :
-    tsm (bsLibToModule libName) ^ "__" ^ tsm (pathToModule path);
+    namespacedName ::libName ::path : tsm (bsLibToModule libName) ^ "__" ^ tsm (pathToModule path);
 
 /* Generic sorting algorithm on directed acyclic graph. Example: [(a, [b, c, d]), (b, [c]), (d, [c])] will be
    sorted into [c, d, b, a] or [c, b, d, a], aka the ones being depended on will always come before the
@@ -224,7 +222,7 @@ type target = {
   compiler: string,
   cmox: string,
   cmax: string,
-  flags: flags
+  flags
 };
 
 type config = {targets: list target};
@@ -303,7 +301,7 @@ let findTarget name => {
   List.nth_exn rebelConfig.targets pos
 };
 
-let readFile path::path =>
+let readFile ::path =>
   switch (Core.Core_sys.is_file (tsp path)) {
   | `Yes => In_channel.read_all (tsp path)
   | _ => ""
@@ -314,3 +312,5 @@ let readFile path::path =>
 let print_path path => print_endline @@ tsp path;
 
 let print_paths paths => List.iter paths f::print_path;
+
+let which exec => Dep.action_stdout (Dep.return (bashf "which %s" exec));

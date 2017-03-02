@@ -4,35 +4,29 @@
  */
 open Core.Std;
 
-let module Dep = Jenga_lib.Api.Dep;
+module Dep = Jenga_lib.Api.Dep;
 
-let module Path = Jenga_lib.Api.Path;
+module Path = Jenga_lib.Api.Path;
 
-let module Rule = Jenga_lib.Api.Rule;
+module Rule = Jenga_lib.Api.Rule;
 
-let module Action = Jenga_lib.Api.Action;
+module Action = Jenga_lib.Api.Action;
 
-let module Scheme = Jenga_lib.Api.Scheme;
+module Scheme = Jenga_lib.Api.Scheme;
 
 open Utils;
 
 /* See comment in the `sprintf` */
-let dotMerlinScheme isTopLevelLib::isTopLevelLib libName::libName dir::dir bscBackend::bscBackend => {
-  let dotMerlinPath = rel dir::dir ".merlin";
+let dotMerlinScheme ::isTopLevelLib ::libName ::dir ::bscBackend => {
+  let dotMerlinPath = rel ::dir ".merlin";
   let thirdPartyNpmLibs = NpmDep.getThirdPartyNpmLibs libDir::dir;
 
   /** Bucklescript Specific stuff **/
   /* TODO change absolute path to relative path once merlin supports relative paths for flags */
   let bsBuildArtifactsPath =
-    Path.reach_from dir::dir (rel dir::nodeModulesRoot "bs-platform/lib/ocaml");
+    Path.reach_from ::dir (rel dir::nodeModulesRoot "bs-platform/lib/ocaml");
   let bucklescriptBuildArtifacts =
     bscBackend ? "# Bucklescript build artifacts\nB " ^ bsBuildArtifactsPath : "";
-  let merlinWorkAroundComment =
-    "# Currently the we use absolute path instead of relative path for bsppx.exe\n" ^
-    "# due to bug in merlin but this will be fixed in future.\n" ^ "More details on this github issue https://github.com/the-lambda-church/merlin/issues/571";
-  let bsppxAbsolutePath = Path.to_absolute_string (
-    rel dir::Path.the_root "node_modules/bs-platform/bin/bsppx.exe"
-  );
 
   /** Only include thirdPartyNpmLibs whose sources are rebel compatible **/
   let thirdPartyNpmMerlinSources =
@@ -40,12 +34,13 @@ let dotMerlinScheme isTopLevelLib::isTopLevelLib libName::libName dir::dir bscBa
     List.map
       f::(
         fun libName =>
-          "S " ^ Path.reach_from dir::dir (rel dir::(rel dir::nodeModulesRoot (tsl libName)) "src")
+          "S " ^ Path.reach_from ::dir (rel dir::(rel dir::nodeModulesRoot (tsl libName)) "src")
       ) |>
     String.concat sep::"\n";
-  let thirdPartyNpmMerlinDeps =
-    thirdPartyNpmLibs |>
-    List.map f::(fun libName => relD dir::(rel dir::nodeModulesRoot (tsl libName)) ".merlin");
+  /* Unused purposefully, because we're not generating .merlin files inside node_modules until esy will allow it. */
+  /* let thirdPartyNpmMerlinDeps = */
+  /*   thirdPartyNpmLibs |> */
+  /*   List.map f::(fun libName => relD dir::(rel dir::nodeModulesRoot (tsl libName)) ".merlin"); */
 
   /** thirdParty Ocamlfind libs  */
   let ocamlfindPkgs =
@@ -58,9 +53,7 @@ let dotMerlinScheme isTopLevelLib::isTopLevelLib libName::libName dir::dir bscBa
   let buildArtifacts =
     rebelConfig.targets |>
     List.map
-      f::(
-        fun target => "B " ^ Path.reach_from dir::dir (rel dir::(rel dir::build target.target) "*")
-      ) |>
+      f::(fun target => "B " ^ Path.reach_from ::dir (rel dir::(rel dir::build target.target) "*")) |>
     String.concat sep::"\n";
 
   /** If toplevel open all the target's modules alias other open the current library's module alias */
@@ -74,25 +67,28 @@ let dotMerlinScheme isTopLevelLib::isTopLevelLib libName::libName dir::dir bscBa
         ["-open " ^ tsm (libToModule libName)]
     ) |>
     String.concat sep::" ";
+  let findWhereBsppxIs =
+    Dep.map
+      (which "bsppx.exe")
+      (
+        fun bsppxAbsolutePath => {
+          let previousContents = readFile path::dotMerlinPath;
 
-  /** Overwrites existing generated conf User conf is preserved */
-  let saveMerlinAction previousContents::previousContents => {
-
-    /** Read the existing custom config **/
-    let customConfig =
-      switch previousContents {
-      | "" => ""
-      | _ =>
-        String.split_lines previousContents |>
-        /* Drop all lines till this particular line */
-        List.drop_while f::(fun s => s != "# User Custom config here") |>
-        /* Drop this particular line */
-        List.drop_while f::(fun s => s == "# User Custom config here") |>
-        String.concat sep::"\n"
-      };
-    let dotMerlinContent =
-      Printf.sprintf
-        {| # DO NOT EDIT THIS SECTION. CUSTOM CONFIG GOES BELOW
+          /** Read the existing custom config **/
+          let customConfig =
+            switch previousContents {
+            | "" => ""
+            | _ =>
+              String.split_lines previousContents |>
+              /* Drop all lines till this particular line */
+              List.drop_while f::(fun s => s != "# User Custom config here") |>
+              /* Drop this particular line */
+              List.drop_while f::(fun s => s == "# User Custom config here") |>
+              String.concat sep::"\n"
+            };
+          let dotMerlinContent =
+            Printf.sprintf
+              {| # DO NOT EDIT THIS SECTION. CUSTOM CONFIG GOES BELOW
 # This file is autogenerated for
 # [Merlin](https://github.com/the-lambda-church/merlin), a static analyser for
 # OCaml that provides autocompletion, jump-to-location, recoverable syntax
@@ -128,31 +124,25 @@ let dotMerlinScheme isTopLevelLib::isTopLevelLib libName::libName dir::dir bscBa
 FLG -w -30 -w -40 %s
 
 %s
-%s
 
 # User Custom config here
 %s
-|}
-        (isTopLevelLib ? "S src" : "")
-        thirdPartyNpmMerlinSources
-        buildArtifacts
-        bucklescriptBuildArtifacts
-        ocamlfindPkgs
-        openFlag
-        (bscBackend ? merlinWorkAroundComment : "")
-        (bscBackend ? "FLG -ppx " ^ bsppxAbsolutePath : "")
-        customConfig;
-    Action.save dotMerlinContent target::dotMerlinPath
-  };
-  Scheme.rules [
-    Rule.simple
-      targets::[dotMerlinPath]
-      deps::thirdPartyNpmMerlinDeps
-      action::(saveMerlinAction previousContents::(readFile path::dotMerlinPath))
-  ]
+        |}
+              (isTopLevelLib ? "S src" : "")
+              thirdPartyNpmMerlinSources
+              buildArtifacts
+              bucklescriptBuildArtifacts
+              ocamlfindPkgs
+              openFlag
+              (bscBackend ? "FLG -ppx " ^ bsppxAbsolutePath : "")
+              customConfig;
+          Action.save dotMerlinContent target::dotMerlinPath
+        }
+      );
+  Scheme.rules [Rule.create targets::[dotMerlinPath] findWhereBsppxIs]
 };
 
-let scheme dir::dir => {
+let scheme ::dir => {
   let bscBackend =
     List.exists rebelConfig.targets f::(fun target => target.engine == "bucklescript");
   /* We generate many .merlin files, one per third-party library (and on at the top). Additionally, this is
@@ -162,16 +152,20 @@ let scheme dir::dir => {
   if (dir == Path.the_root) {
     let toplevelScheme =
       /* libName here is computer inside the function for various targets */
-      dotMerlinScheme isTopLevelLib::true dir::dir libName::(Lib "") bscBackend::bscBackend;
+      dotMerlinScheme isTopLevelLib::true ::dir libName::(Lib "") ::bscBackend;
     Scheme.all [
-      Scheme.rules [Rule.default dir::dir [relD dir::Path.the_root ".merlin"]],
+      Scheme.rules [Rule.default ::dir [relD dir::Path.the_root ".merlin"]],
       toplevelScheme
     ]
   } else if (
     Path.dirname dir == nodeModulesRoot
   ) {
-    let libName = Lib (Path.basename dir);
-    dotMerlinScheme isTopLevelLib::false dir::dir libName::libName bscBackend::bscBackend
+    /**
+     * Those are commented out because when running `rebel` inside an `esy` sandbox we're not allowed to inject .merlin files in node_modules.
+     */
+    /* let libName = Lib (Path.basename dir); */
+    /* dotMerlinScheme isTopLevelLib::false ::dir ::libName ::bscBackend */
+    Scheme.no_rules
   } else {
     Scheme.no_rules
   }
